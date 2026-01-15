@@ -9,7 +9,11 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: "https://aitaskmanagersystem.vercel.app",
+    methods:['GET','POST','PUT','DELETE'],
+    credentials: true
+}));
 app.use(express.json()); // Body parser
 
 // Routes
