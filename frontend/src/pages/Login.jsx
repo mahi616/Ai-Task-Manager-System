@@ -8,33 +8,34 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  useEffect(()=>{
-    const token = localStorage.getItem('token');
+  useEffect(() => {
+    const token = localStorage.getItem("token");
     if (!token) {
-      navigate('/login')
-    }else{
-      navigate('/dashboard');
+      navigate("/login");
+    } else {
+      navigate("/dashboard");
     }
-  },[])
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMsg("");
+    setLoading(true); 
 
     try {
-      // Call backend API
       const res = await axiosInstance.post("/auth/login", {
         email,
         password,
       });
 
-      // Save token
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Update Redux
       dispatch(
         loginSuccess({
           user: res.data.user,
@@ -42,15 +43,12 @@ export default function Login() {
         })
       );
 
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-
       setMsg("Login successful!");
-
-      // Redirect
       navigate("/dashboard");
     } catch (err) {
       setMsg(err.response?.data?.message || "Invalid Credentials");
+    } finally {
+      setLoading(false); 
     }
   };
 
@@ -69,6 +67,7 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
           className="p-2 rounded-md bg-gray-800/50"
           required
+          disabled={loading}
         />
 
         <input
@@ -78,13 +77,23 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           className="p-2 rounded-md bg-gray-800/50"
           required
+          disabled={loading}
         />
 
         <button
           type="submit"
-          className="bg-purple-600 py-2 rounded-md text-white font-semibold"
+          disabled={loading}
+          className={`py-2 rounded-md text-white font-semibold flex items-center justify-center gap-2
+            ${loading ? "bg-purple-400 cursor-not-allowed" : "bg-purple-600"}`}
         >
-          Login
+          {loading ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Logging in...
+            </>
+          ) : (
+            "Login"
+          )}
         </button>
 
         {msg && <p className="text-center text-sm mt-2">{msg}</p>}
